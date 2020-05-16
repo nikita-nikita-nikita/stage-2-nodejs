@@ -5,7 +5,6 @@ const { responseMiddleware } = require('../middlewares/response.middleware');
 
 const router = Router();
 router.post("/", (req, res, next)=>{
-    console.log("/");
     if(req.body) {
         res.data = {...req.body, id:UserService.generateId()};
         next();
@@ -22,7 +21,6 @@ router.post("/", (req, res, next)=>{
 }, responseMiddleware);
 
 router.get("/:id", (req, res, next)=>{
-    console.log("/:id");
     const user = UserService.search(req.params.id);
     if (user){
         res.data = user;
@@ -32,7 +30,6 @@ router.get("/:id", (req, res, next)=>{
     }
 }, responseMiddleware);
 router.get("/", (req, res, next)=>{
-    console.log("/");
     const users = UserService.getUsers();
     if (users){
         res.data = users;

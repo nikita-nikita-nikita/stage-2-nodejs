@@ -4,14 +4,22 @@ const { responseMiddleware } = require('../middlewares/response.middleware');
 const { createFighterValid, updateFighterValid } = require('../middlewares/fighter.validation.middleware');
 
 const router = Router();
-
+router.get("/:id", (req, res, next)=>{
+    const user = FighterService.search(req.params.id);
+    if (user){
+        res.data = user;
+        next();
+    }else{
+        res.status(400).send({error:true, message:`can't find fighter with id: ${req.params.id}`})
+    }
+}, responseMiddleware);
 router.get("/", (req, res, next) => {
     const fighters = FighterService.getFighters();
     if(fighters){
         res.data = fighters;
         next();
     }else {
-        res.status(400).send({error:true, message:`can't find user with id`});
+        res.status(400).send({error:true, message:`can't find fighter with id`});
     }
 }, responseMiddleware);
 

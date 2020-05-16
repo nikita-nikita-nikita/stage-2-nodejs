@@ -6,6 +6,10 @@ const { responseMiddleware } = require('../middlewares/response.middleware');
 const router = Router();
 router.post("/", (req, res, next)=>{
     if(req.body) {
+        if(UserService.search(res.data)){
+            res.status(400).send({error:true, message:"user already exist"});
+            return;
+        }
         res.data = {...req.body, id:UserService.generateId()};
         next();
     }else{
@@ -41,7 +45,12 @@ router.get("/", (req, res, next)=>{
 
 router.put("/:id", (req, res, next)=>{
     if(req.body) {
-        res.data = {...req.body, id:req.params.id};
+        res.data = {id:req.params.id};
+        if(!UserService.search({id:req.params.id})){
+            res.status(400).send({error:true, message:`can't find user with this id: ${req.params.id}`});
+            return;
+        }
+        res.data = {id:req.params.id, ...req.body};
         next();
     }else{
         res.status(404).send({error:true, message:"something got wrong"});
@@ -51,18 +60,18 @@ router.put("/:id", (req, res, next)=>{
     if(user){
         next();
     }else {
-        res.status(400).send({error:true, message:`can't find user with id: ${req.params.id}`});
+        res.status(400).send({error:true, message:"something got wrong"});
     }
 },responseMiddleware);
 
 router.delete("/:id", (req, res, next)=>{
-    const user = UserService.delete(req.params.id);
-    if(user.length===0){
-        res.status(400).send({error:true, message:`cannot delete user with id: ${req.params.id}`});
-    }else {
-        res.data = {user};
-        next()
+    if(!UserService.search({id:req.params.id})){
+        res.status(400).send({error:true, message:`can't find user with this id: ${req.params.id}`});
+        return;
     }
+    const user = UserService.delete(req.params.id);
+    res.data = {user};
+    next()
 
 }, responseMiddleware);
 module.exports = router;

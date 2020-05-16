@@ -4,6 +4,9 @@ const { responseMiddleware } = require('../middlewares/response.middleware');
 const { createFighterValid, updateFighterValid } = require('../middlewares/fighter.validation.middleware');
 
 const router = Router();
+
+// TODO: Implement route controllers for fighter
+
 router.get("/:id", (req, res, next)=>{
     const user = FighterService.search(req.params.id);
     if (user){
@@ -19,15 +22,21 @@ router.get("/", (req, res, next) => {
         res.data = fighters;
         next();
     }else {
-        res.status(400).send({error:true, message:`can't find fighter with id`});
+        res.status(400).send({error:true, message:`can't find user with id`});
     }
 }, responseMiddleware);
 
 
 router.post("/",(req, res, next) => {
     if(req.body) {
-        res.data = {...req.body, id:req.params.id};
+        if(FighterService.search(res.data)){
+            res.status(400).send({error:true, message:"fighter already exist"});
+            return;
+        }
+        res.data = {...req.body, id:FighterService.generateId()};
         next();
+    }else{
+        res.status(404).send({error:true, message:"something got wrong"});
     }
     res.status(404).send({error:true, message:"something got wrong"});
 }, createFighterValid, (req, res, next) => {
@@ -39,9 +48,14 @@ router.post("/",(req, res, next) => {
 
 router.put("/:id", (req, res, next)=>{
     if(req.body) {
-        res.data = {...req.body, id:req.params.id};
+        res.data = {id:req.params.id};
+        if(!FighterService.search({id:req.params.id})){
+            res.status(400).send({error:true, message:`can't find user with this id: ${req.params.id}`});
+            return;
+        }
+        res.data = {id:req.params.id, ...req.body};
         next();
-    }else {
+    }else{
         res.status(404).send({error:true, message:"something got wrong"});
     }
 }, updateFighterValid, (req, res, next)=>{
@@ -54,13 +68,12 @@ router.put("/:id", (req, res, next)=>{
 },responseMiddleware);
 
 router.delete("/:id",(req,res,next)=>{
-    const fighters = FighterService.delete(req.params.id);
-    if(fighters.length===0){
-        res.status(400).send({error:true, message:`cannot delete fighter with id: ${req.params.id}`});
-    }else {
-        res.data = {fighters};
-        next();
+    if(!FighterService.search({id:req.params.id})){
+        res.status(400).send({error:true, message:`can't find user with this id: ${req.params.id}`});
+        return;
     }
+    res.data = {fighters};
+    next();
 });
 
 module.exports = router;
